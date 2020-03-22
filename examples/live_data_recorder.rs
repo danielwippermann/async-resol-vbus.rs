@@ -1,8 +1,6 @@
 use std::fs::File;
 
-use async_std::{
-    net::{SocketAddr, TcpStream},
-};
+use async_std::net::{SocketAddr, TcpStream};
 
 use resol_vbus::{DataSet, RecordingWriter};
 
