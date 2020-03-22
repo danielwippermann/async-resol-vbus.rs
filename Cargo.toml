@@ -2,11 +2,14 @@
 name = "async-resol-vbus"
 version = "0.1.0"
 authors = ["Daniel Wippermann <Daniel.Wippermann@gmail.com>"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/danielwippermann/async-resol-vbus.rs"
+documentation = "https://docs.rs/async-resol-vbus"
+description = "A Rust library for processing RESOL VBus data asynchronously."
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 "async-std" = "1.5.0"
-# FIXME(daniel): do not use relative path dep here!
-"resol-vbus" = { path = "../resol-vbus.rs" }
+"resol-vbus" = "0.2"
