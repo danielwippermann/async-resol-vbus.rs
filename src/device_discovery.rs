@@ -99,9 +99,8 @@ impl DeviceDiscovery {
         for mut address in addresses {
             address.set_port(self.fetch_port);
 
-            match DeviceInformation::fetch(address, self.fetch_timeout).await {
-                Ok(device) => devices.push(device),
-                Err(_) => (),
+            if let Ok(device) = DeviceInformation::fetch(address, self.fetch_timeout).await {
+                devices.push(device);
             }
         }
 
@@ -155,5 +154,11 @@ impl DeviceDiscovery {
         let addresses = addresses.into_iter().collect();
 
         Ok(addresses)
+    }
+}
+
+impl Default for DeviceDiscovery {
+    fn default() -> DeviceDiscovery {
+        DeviceDiscovery::new()
     }
 }

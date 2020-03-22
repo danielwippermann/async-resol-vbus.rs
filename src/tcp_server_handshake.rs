@@ -104,7 +104,7 @@ impl TcpServerHandshake {
         V: Fn(String, Option<String>) -> R,
         R: Future<Output = FutureResult<T>>,
     {
-        let result = loop {
+        loop {
             let line = self.receive_line().await?;
             let line = line.trim();
 
@@ -130,9 +130,7 @@ impl TcpServerHandshake {
             if let Some(result) = result {
                 break result;
             }
-        };
-
-        result
+        }
     }
 
     /// Wait for a `CONNECT <via_tag>` command. The via tag argument is returned.
