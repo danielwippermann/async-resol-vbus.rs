@@ -1,6 +1,9 @@
 use std::{net::SocketAddr, time::Duration};
 
-use async_std::{net::TcpStream, prelude::*};
+use async_std::{
+    net::{Shutdown, TcpStream},
+    prelude::*,
+};
 
 use crate::error::Result;
 
@@ -60,6 +63,8 @@ impl DeviceInformation {
             stream
                 .write_all(b"GET /cgi-bin/get_resol_device_information HTTP/1.0\r\n\r\n")
                 .await?;
+
+            stream.shutdown(Shutdown::Write)?;
 
             let mut buf = Vec::with_capacity(1024);
             let len = stream.read_to_end(&mut buf).await?;
@@ -223,6 +228,63 @@ impl DeviceInformation {
             build,
             name,
             features,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use async_std::net::{SocketAddr, TcpListener};
+
+    use super::*;
+
+    #[test]
+    fn test() -> Result<()> {
+        async_std::task::block_on(async {
+            let web_addr = "127.0.0.1:0".parse::<SocketAddr>()?;
+            let web_socket = TcpListener::bind(web_addr).await?;
+            let web_addr = web_socket.local_addr()?;
+
+            let web_future = async_std::task::spawn::<_, Result<()>>(async move {
+                loop {
+                    let (mut stream, _) = web_socket.accept().await?;
+
+                    let mut buf = Vec::new();
+                    stream.read_to_end(&mut buf).await?;
+
+                    let response = b"HTTP/1.0 200 OK\r\n\r\nvendor = \"RESOL\"\r\nproduct = \"DL2\"\r\nserial = \"001E66xxxxxx\"\r\nversion = \"2.2.0\"\r\nbuild = \"rc1\"\r\nname = \"DL2-001E66xxxxxx\"\r\nfeatures = \"vbus,dl2\"\r\n";
+                    stream.write_all(response).await?;
+                    drop(stream);
+                }
+            });
+
+            let fetch_future = async_std::task::spawn::<_, Result<()>>(async move {
+                let device = DeviceInformation::fetch(web_addr, Duration::from_millis(100)).await?;
+
+                assert_eq!(Some("RESOL"), device.vendor.as_ref().map(|s| s.as_str()));
+                assert_eq!(Some("DL2"), device.product.as_ref().map(|s| s.as_str()));
+                assert_eq!(
+                    Some("001E66xxxxxx"),
+                    device.serial.as_ref().map(|s| s.as_str())
+                );
+                assert_eq!(Some("2.2.0"), device.version.as_ref().map(|s| s.as_str()));
+                assert_eq!(Some("rc1"), device.build.as_ref().map(|s| s.as_str()));
+                assert_eq!(
+                    Some("DL2-001E66xxxxxx"),
+                    device.name.as_ref().map(|s| s.as_str())
+                );
+                assert_eq!(
+                    Some("vbus,dl2"),
+                    device.features.as_ref().map(|s| s.as_str())
+                );
+
+                Ok(())
+            });
+
+            fetch_future.await?;
+            drop(web_future);
+
+            Ok(())
         })
     }
 }

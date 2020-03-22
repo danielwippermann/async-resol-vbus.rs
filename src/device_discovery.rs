@@ -162,3 +162,80 @@ impl Default for DeviceDiscovery {
         DeviceDiscovery::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use async_std::{
+        net::{SocketAddr, TcpListener, UdpSocket},
+        prelude::*,
+    };
+
+    use super::*;
+
+    #[test]
+    fn test() -> Result<()> {
+        async_std::task::block_on(async {
+            let device_addr = "0.0.0.0:0".parse::<SocketAddr>()?;
+            let device_socket = UdpSocket::bind(device_addr).await?;
+            let device_addr = device_socket.local_addr()?;
+
+            let web_addr = "0.0.0.0:0".parse::<SocketAddr>()?;
+            let web_socket = TcpListener::bind(web_addr).await?;
+            let web_addr = web_socket.local_addr()?;
+
+            let device_future = async_std::task::spawn::<_, Result<()>>(async move {
+                let mut buf = [0u8; 256];
+
+                let query_bytes = b"---RESOL-BROADCAST-QUERY---";
+                let reply_bytes = b"---RESOL-BROADCAST-REPLY---";
+
+                loop {
+                    let (len, addr) = device_socket.recv_from(&mut buf).await?;
+
+                    let buf = &buf[0..len];
+                    if buf == query_bytes {
+                        device_socket.send_to(reply_bytes, addr).await?;
+                    }
+                }
+            });
+
+            let web_future = async_std::task::spawn::<_, Result<()>>(async move {
+                loop {
+                    let (mut stream, _) = web_socket.accept().await?;
+
+                    let mut buf = Vec::new();
+                    stream.read_to_end(&mut buf).await?;
+
+                    let response = b"HTTP/1.0 200 OK\r\n\r\nvendor = \"RESOL\"\r\nproduct = \"DL2\"\r\nserial = \"001E66xxxxxx\"\r\nversion = \"2.2.0\"\r\nbuild = \"rc1\"\r\nname = \"DL2-001E66xxxxxx\"\r\nfeatures = \"vbus,dl2\"\r\n";
+                    stream.write_all(response).await?;
+                    drop(stream);
+                }
+            });
+
+            let discovery_future = async_std::task::spawn::<_, Result<()>>(async move {
+                let mut discovery = DeviceDiscovery::new();
+                discovery.set_broadcast_addr(device_addr);
+                discovery.set_broadcast_timeout(Duration::from_millis(100));
+                discovery.set_fetch_port(web_addr.port());
+                discovery.set_fetch_timeout(Duration::from_millis(100));
+
+                let addresses = discovery.discover_device_addresses().await?;
+
+                assert_eq!(1, addresses.len());
+                assert_eq!(device_addr.port(), addresses[0].port());
+
+                let devices = discovery.discover_devices().await?;
+
+                assert_eq!(1, devices.len());
+
+                Ok(())
+            });
+
+            discovery_future.await?;
+            drop(device_future);
+            drop(web_future);
+
+            Ok(())
+        })
+    }
+}
