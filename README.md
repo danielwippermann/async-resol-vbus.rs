@@ -17,7 +17,7 @@ All other trademarks are the property of their respective owners.
 
 ## License
 
-`resol-vbus.rs` is distributed under the terms of both the MIT license and the
+`async-resol-vbus.rs` is distributed under the terms of both the MIT license and the
 Apache License (Version 2.0).
 
 See LICENSE.txt for details.
