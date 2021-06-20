@@ -5,6 +5,10 @@ rust:
   - beta
   - nightly
 
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y install libudev-dev
+
 script:
   - cargo test --examples
   - cargo test --doc
