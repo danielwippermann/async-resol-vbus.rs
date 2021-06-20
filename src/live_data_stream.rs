@@ -326,7 +326,7 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
                         false
                     } else if dgram.header.destination_address != tx_dgram.header.source_address {
                         false
-                    } else if dgram.command != 0x0100 {
+                    } else if dgram.command != 0x0100 && dgram.command != 0x1001{
                         false
                     } else if dgram.param16 != tx_dgram.param16 {
                         false
@@ -359,7 +359,7 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
                         false
                     } else if dgram.header.destination_address != tx_dgram.header.source_address {
                         false
-                    } else if dgram.command != 0x0100 {
+                    } else if dgram.command != 0x0100 && dgram.command != 0x1101 {
                         false
                     } else if dgram.param32 != tx_dgram.param32 {
                         false
