@@ -1,3 +1,5 @@
+/coverage-target
 /target
 **/*.rs.bk
 Cargo.lock
+/examples/*/target
