@@ -5,10 +5,6 @@ rust:
   - beta
   - nightly
 
-before_install:
-  - sudo apt-get update
-  - sudo apt-get -y install libudev-dev
-
 script:
   - cargo test --examples
   - cargo test --doc
@@ -20,6 +16,8 @@ jobs:
   include:
     - stage: check
       script:
+        - sudo apt-get update
+        - sudo apt-get -y install libudev-dev
         - cargo check --all-targets
         - cd examples/customizer && cargo check --all-targets
         - cd ../vbus_serial_to_tcp && cargo check --all-targets
