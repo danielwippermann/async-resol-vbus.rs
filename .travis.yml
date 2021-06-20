@@ -18,7 +18,7 @@ jobs:
       script:
         - cargo check --all-targets
         - cd examples/customizer && cargo check --all-targets
-        - cd examples/vbus_serial_to_tcp && cargo check --all-targets
+        - cd ../vbus_serial_to_tcp && cargo check --all-targets
       rust: stable
       os: linux
     - stage: test
