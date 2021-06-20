@@ -3,6 +3,13 @@
 Provides VBus-over-TCP access using a VBus/USB adapter.
 
 
+## Synopsis
+
+If you use a serial connection (e.g. VBus/USB adapter or DeltaSol SLT's built-in USB port) to connect to your RESOL controller, you are limited to only one program accessing its serial port at any given time. If you need access with more than one program, the "vbus_serial_to_tcp" example might come in handy.
+
+The "vbus_serial_to_tcp" example provides access to the serial port over a network connection using RESOL's [VBus-over-TCP protocol](http://danielwippermann.github.io/resol-vbus/#/md/docs/vbus-over-tcp). "vbus_serial_to_tcp" is connected to the serial port and forwards data back and forth between the serial port and all connected VBus-over-TCP clients.
+
+
 ## Setup
 
 You need a recent Rust toolchain to compile this example.
