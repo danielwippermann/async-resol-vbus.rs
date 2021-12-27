@@ -1,9 +1,6 @@
 use std::{net::SocketAddr, time::Duration};
 
-use async_std::{
-    net::{Shutdown, TcpStream},
-    prelude::*,
-};
+use async_std::{net::{Shutdown, TcpStream}, prelude::*};
 
 use crate::error::Result;
 
@@ -57,21 +54,25 @@ impl DeviceInformation {
     /// # Ok(()) }) }
     /// ```
     pub async fn fetch(addr: SocketAddr, timeout: Duration) -> Result<DeviceInformation> {
-        let (buf, len) = async_std::io::timeout(timeout, async {
+        let f = async {
             let mut stream = TcpStream::connect(addr).await?;
 
             stream
                 .write_all(b"GET /cgi-bin/get_resol_device_information HTTP/1.0\r\n\r\n")
                 .await?;
 
+            stream.flush().await?;
+
             stream.shutdown(Shutdown::Write)?;
 
             let mut buf = Vec::with_capacity(1024);
             let len = stream.read_to_end(&mut buf).await?;
 
-            Ok((buf, len))
-        })
-        .await?;
+            std::io::Result::Ok((buf, len))
+        };
+
+        // let (buf, len) = f.await?;
+        let (buf, len) = async_std::io::timeout(timeout, f).await?;
 
         let buf = &buf[0..len];
 
@@ -80,15 +81,8 @@ impl DeviceInformation {
 
             let mut idx = 0;
             while idx < len - 4 {
-                if buf[idx] != 13 {
-                    // nop
-                } else if buf[idx + 1] != 10 {
-                    // nop
-                } else if buf[idx + 2] != 13 {
-                    // nop
-                } else if buf[idx + 3] != 10 {
-                    // nop
-                } else {
+                if buf[idx] == 13 && buf[idx + 1] == 10 && buf[idx + 2] == 13 && buf[idx + 3] == 10
+                {
                     body_idx = Some(idx + 4);
                     break;
                 }
@@ -153,10 +147,7 @@ impl DeviceInformation {
             let mut phase = Phase::InKey;
 
             for (idx, c) in line.char_indices() {
-                let is_word_char = match c {
-                    '0'..='9' | 'A'..='Z' | 'a'..='z' | '_' => true,
-                    _ => false,
-                };
+                let is_word_char = matches!(c, '0'..='9' | 'A'..='Z' | 'a'..='z' | '_');
 
                 match phase {
                     Phase::InKey => {
@@ -234,7 +225,7 @@ impl DeviceInformation {
 
 #[cfg(test)]
 mod tests {
-    use async_std::net::{SocketAddr, TcpListener};
+    use async_std::{net::{SocketAddr, TcpListener}, io::WriteExt};
 
     use super::*;
 
@@ -254,6 +245,9 @@ mod tests {
 
                     let response = b"HTTP/1.0 200 OK\r\n\r\nvendor = \"RESOL\"\r\nproduct = \"DL2\"\r\nserial = \"001E66xxxxxx\"\r\nversion = \"2.2.0\"\r\nbuild = \"rc1\"\r\nname = \"DL2-001E66xxxxxx\"\r\nfeatures = \"vbus,dl2\"\r\n";
                     stream.write_all(response).await?;
+
+                    stream.flush().await?;
+
                     drop(stream);
                 }
             });

@@ -213,11 +213,7 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
         let rx_data = self
             .receive(20000, |data| {
                 if let Some(dgram) = try_as_datagram(data) {
-                    if dgram.command != 0x0500 {
-                        false
-                    } else {
-                        true
-                    }
+                    dgram.command == 0x0500
                 } else {
                     false
                 }
@@ -254,17 +250,10 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
         let rx_data = self
             .transceive(tx_data, 3, 500, 500, |data| {
                 if let Some(dgram) = try_as_datagram(data) {
-                    if dgram.header.source_address != tx_dgram.header.destination_address {
-                        false
-                    } else if dgram.header.destination_address != tx_dgram.header.source_address {
-                        false
-                    } else if dgram.command != (0x0100 | u16::from(subindex)) {
-                        false
-                    } else if dgram.param16 != tx_dgram.param16 {
-                        false
-                    } else {
-                        true
-                    }
+                    dgram.header.source_address == tx_dgram.header.destination_address
+                        && dgram.header.destination_address == tx_dgram.header.source_address
+                        && dgram.command == (0x0100 | u16::from(subindex))
+                        && dgram.param16 == tx_dgram.param16
                 } else {
                     false
                 }
@@ -289,17 +278,10 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
         let rx_data = self
             .transceive(tx_data, 3, 500, 500, |data| {
                 if let Some(dgram) = try_as_datagram(data) {
-                    if dgram.header.source_address != tx_dgram.header.destination_address {
-                        false
-                    } else if dgram.header.destination_address != tx_dgram.header.source_address {
-                        false
-                    } else if dgram.command != (0x0100 | u16::from(subindex)) {
-                        false
-                    } else if dgram.param16 != tx_dgram.param16 {
-                        false
-                    } else {
-                        true
-                    }
+                    dgram.header.source_address == tx_dgram.header.destination_address
+                        && dgram.header.destination_address == tx_dgram.header.source_address
+                        && dgram.command == (0x0100 | u16::from(subindex))
+                        && dgram.param16 == tx_dgram.param16
                 } else {
                     false
                 }
@@ -322,17 +304,10 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
         let rx_data = self
             .transceive(tx_data, 3, 500, 500, |data| {
                 if let Some(dgram) = try_as_datagram(data) {
-                    if dgram.header.source_address != tx_dgram.header.destination_address {
-                        false
-                    } else if dgram.header.destination_address != tx_dgram.header.source_address {
-                        false
-                    } else if dgram.command != 0x0100 && dgram.command != 0x1001 {
-                        false
-                    } else if dgram.param16 != tx_dgram.param16 {
-                        false
-                    } else {
-                        true
-                    }
+                    dgram.header.source_address == tx_dgram.header.destination_address
+                        && dgram.header.destination_address == tx_dgram.header.source_address
+                        && (dgram.command == 0x0100 || dgram.command == 0x1001)
+                        && dgram.param16 == tx_dgram.param16
                 } else {
                     false
                 }
@@ -355,17 +330,10 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
         let rx_data = self
             .transceive(tx_data, 3, 500, 500, |data| {
                 if let Some(dgram) = try_as_datagram(data) {
-                    if dgram.header.source_address != tx_dgram.header.destination_address {
-                        false
-                    } else if dgram.header.destination_address != tx_dgram.header.source_address {
-                        false
-                    } else if dgram.command != 0x0100 && dgram.command != 0x1101 {
-                        false
-                    } else if dgram.param32 != tx_dgram.param32 {
-                        false
-                    } else {
-                        true
-                    }
+                    dgram.header.source_address == tx_dgram.header.destination_address
+                        && dgram.header.destination_address == tx_dgram.header.source_address
+                        && (dgram.command == 0x0100 || dgram.command == 0x1101)
+                        && dgram.param32 == tx_dgram.param32
                 } else {
                     false
                 }
@@ -384,15 +352,9 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
         let rx_data = self
             .transceive(tx_data, 3, 500, 500, |data| {
                 if let Data::Datagram(ref dgram) = *data {
-                    if dgram.header.source_address != tx_dgram.header.destination_address {
-                        false
-                    } else if dgram.header.destination_address != tx_dgram.header.source_address {
-                        false
-                    } else if dgram.command != 0x1301 {
-                        false
-                    } else {
-                        true
-                    }
+                    dgram.header.source_address == tx_dgram.header.destination_address
+                        && dgram.header.destination_address == tx_dgram.header.source_address
+                        && dgram.command == 0x1301
                 } else {
                     false
                 }
@@ -415,15 +377,9 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
         let rx_data = self
             .transceive(tx_data, 3, 500, 500, |data| {
                 if let Data::Datagram(ref dgram) = *data {
-                    if dgram.header.source_address != tx_dgram.header.destination_address {
-                        false
-                    } else if dgram.header.destination_address != tx_dgram.header.source_address {
-                        false
-                    } else if dgram.command != 0x1401 {
-                        false
-                    } else {
-                        true
-                    }
+                    dgram.header.source_address == tx_dgram.header.destination_address
+                        && dgram.header.destination_address == tx_dgram.header.source_address
+                        && dgram.command == 0x1401
                 } else {
                     false
                 }
@@ -445,15 +401,9 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
         let rx_data = self
             .transceive(tx_data, 3, 500, 500, |data| {
                 if let Data::Datagram(ref dgram) = *data {
-                    if dgram.header.source_address != tx_dgram.header.destination_address {
-                        false
-                    } else if dgram.header.destination_address != tx_dgram.header.source_address {
-                        false
-                    } else if dgram.command != 0x1403 {
-                        false
-                    } else {
-                        true
-                    }
+                    dgram.header.source_address == tx_dgram.header.destination_address
+                        && dgram.header.destination_address == tx_dgram.header.source_address
+                        && dgram.command == 0x1403
                 } else {
                     false
                 }
@@ -475,15 +425,9 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
         let rx_data = self
             .transceive(tx_data, 3, 500, 500, |data| {
                 if let Data::Datagram(ref dgram) = *data {
-                    if dgram.header.source_address != tx_dgram.header.destination_address {
-                        false
-                    } else if dgram.header.destination_address != tx_dgram.header.source_address {
-                        false
-                    } else if dgram.command != 0x1405 {
-                        false
-                    } else {
-                        true
-                    }
+                    dgram.header.source_address == tx_dgram.header.destination_address
+                        && dgram.header.destination_address == tx_dgram.header.source_address
+                        && dgram.command == 0x1405
                 } else {
                     false
                 }
@@ -508,17 +452,10 @@ impl<R: Read + Unpin, W: Write + Unpin> LiveDataStream<R, W> {
         let rx_data = self
             .transceive(tx_data, 3, 500, 500, |data| {
                 if let Data::Datagram(ref dgram) = *data {
-                    if dgram.header.source_address != tx_dgram.header.destination_address {
-                        false
-                    } else if dgram.header.destination_address != tx_dgram.header.source_address {
-                        false
-                    } else if dgram.command != (0x1600 | u16::from(subindex)) {
-                        false
-                    } else if dgram.param16 != tx_dgram.param16 {
-                        false
-                    } else {
-                        true
-                    }
+                    dgram.header.source_address == tx_dgram.header.destination_address
+                        && dgram.header.destination_address == tx_dgram.header.source_address
+                        && dgram.command == (0x1600 | u16::from(subindex))
+                        && dgram.param16 == tx_dgram.param16
                 } else {
                     false
                 }

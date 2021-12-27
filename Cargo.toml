@@ -6,10 +6,10 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/danielwippermann/async-resol-vbus.rs"
 documentation = "https://docs.rs/async-resol-vbus"
 description = "A Rust library for processing RESOL VBus data asynchronously."
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-"async-std" = "1.5.0"
+"async-std" = "1.10"
 "resol-vbus" = "0.2"

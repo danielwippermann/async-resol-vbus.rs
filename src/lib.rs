@@ -37,7 +37,7 @@
 //!         // Create an recording file and hand it to a `RecordingWriter`
 //!         let file = File::create("test.vbus")?;
 //!         let mut rw = RecordingWriter::new(file);
-//!     
+//!
 //!         // Parse the address of the DL2 to connect to
 //!         let addr = "192.168.13.45:7053".parse::<SocketAddr>()?;
 //!
@@ -76,12 +76,7 @@
 #![deny(nonstandard_style)]
 #![deny(rust_2018_compatibility)]
 #![deny(rust_2018_idioms)]
-#![allow(clippy::if_same_then_else)]
-#![allow(clippy::large_enum_variant)]
-#![allow(clippy::needless_bool)]
-#![allow(clippy::needless_pass_by_value)]
-#![allow(clippy::trivially_copy_pass_by_ref)]
-#![allow(clippy::write_with_newline)]
+#![deny(rust_2021_compatibility)]
 
 pub use resol_vbus::*;
 

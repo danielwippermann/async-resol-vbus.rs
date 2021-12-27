@@ -21,3 +21,4 @@ impl IntoError for String {}
 impl IntoError for std::io::Error {}
 impl IntoError for std::net::AddrParseError {}
 impl IntoError for std::str::Utf8Error {}
+impl IntoError for async_std::future::TimeoutError {}

@@ -138,11 +138,7 @@ impl DeviceDiscovery {
                 let mut buf = [0u8; 64];
                 loop {
                     let (len, address) = broadcast_socket.recv_from(&mut buf).await?;
-                    if len != reply_bytes.len() {
-                        // nop
-                    } else if &buf[0..len] != reply_bytes {
-                        // nop
-                    } else {
+                    if len == reply_bytes.len() && &buf[0..len] == reply_bytes {
                         addresses.insert(address);
                     }
                 }
