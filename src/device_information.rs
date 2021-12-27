@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, time::Duration};
 
-use async_std::{net::{Shutdown, TcpStream}, prelude::*};
+use async_std::{net::TcpStream, prelude::*};
 
 use crate::error::Result;
 
@@ -33,6 +33,23 @@ pub struct DeviceInformation {
 }
 
 impl DeviceInformation {
+    pub(crate) fn find_http_body_idx(buf: &[u8]) -> Option<usize> {
+        let mut body_idx = None;
+
+        let len = buf.len();
+        let mut idx = 0;
+        while idx + 4 <= len {
+            if buf[idx] == 13 && buf[idx + 1] == 10 && buf[idx + 2] == 13 && buf[idx + 3] == 10 {
+                body_idx = Some(idx + 4);
+                break;
+            }
+
+            idx += 1;
+        }
+
+        body_idx
+    }
+
     /// Fetch and parse the information from a VBus-over-TCP device.
     ///
     /// This function performs a web request to the `/cgi-bin/get_resol_device_information`
@@ -57,13 +74,17 @@ impl DeviceInformation {
         let f = async {
             let mut stream = TcpStream::connect(addr).await?;
 
-            stream
-                .write_all(b"GET /cgi-bin/get_resol_device_information HTTP/1.0\r\n\r\n")
-                .await?;
+            let host = if addr.port() == 80 {
+                format!("{}", addr.ip())
+            } else {
+                format!("{}:{}", addr.ip(), addr.port())
+            };
+
+            let request_string = format!("GET /cgi-bin/get_resol_device_information HTTP/1.0\r\nHost: {}\r\nUser-Agent: async-resol-vbus.rs\r\n\r\n", host);
+
+            stream.write_all(request_string.as_bytes()).await?;
 
             stream.flush().await?;
-
-            stream.shutdown(Shutdown::Write)?;
 
             let mut buf = Vec::with_capacity(1024);
             let len = stream.read_to_end(&mut buf).await?;
@@ -76,24 +97,9 @@ impl DeviceInformation {
 
         let buf = &buf[0..len];
 
-        let body_idx = {
-            let mut body_idx = None;
-
-            let mut idx = 0;
-            while idx < len - 4 {
-                if buf[idx] == 13 && buf[idx + 1] == 10 && buf[idx + 2] == 13 && buf[idx + 3] == 10
-                {
-                    body_idx = Some(idx + 4);
-                    break;
-                }
-
-                idx += 1;
-            }
-
-            match body_idx {
-                Some(idx) => idx,
-                None => return Err("No HTTP header separator found".into()),
-            }
+        let body_idx = match DeviceInformation::find_http_body_idx(buf) {
+            Some(idx) => idx,
+            None => return Err("No HTTP header separator found".into()),
         };
 
         let body_bytes = &buf[body_idx..];
@@ -225,7 +231,7 @@ impl DeviceInformation {
 
 #[cfg(test)]
 mod tests {
-    use async_std::{net::{SocketAddr, TcpListener}, io::WriteExt};
+    use async_std::net::{SocketAddr, TcpListener};
 
     use super::*;
 
@@ -236,20 +242,8 @@ mod tests {
             let web_socket = TcpListener::bind(web_addr).await?;
             let web_addr = web_socket.local_addr()?;
 
-            let web_future = async_std::task::spawn::<_, Result<()>>(async move {
-                loop {
-                    let (mut stream, _) = web_socket.accept().await?;
-
-                    let mut buf = Vec::new();
-                    stream.read_to_end(&mut buf).await?;
-
-                    let response = b"HTTP/1.0 200 OK\r\n\r\nvendor = \"RESOL\"\r\nproduct = \"DL2\"\r\nserial = \"001E66xxxxxx\"\r\nversion = \"2.2.0\"\r\nbuild = \"rc1\"\r\nname = \"DL2-001E66xxxxxx\"\r\nfeatures = \"vbus,dl2\"\r\n";
-                    stream.write_all(response).await?;
-
-                    stream.flush().await?;
-
-                    drop(stream);
-                }
+            let web_future = async_std::task::spawn(async move {
+                crate::test_utils::create_webserver(web_socket).await
             });
 
             let fetch_future = async_std::task::spawn::<_, Result<()>>(async move {
