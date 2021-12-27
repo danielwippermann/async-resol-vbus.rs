@@ -3,6 +3,14 @@
 Allows to read or write controller parameters using a VBus-over-TCP service.
 
 
+## Features
+
+- Connects to a VBus-over-TCP service (e.g. for a datalogger or VBus.net)
+- Read and write controller parameters
+- Optionally looks up values by name
+- Optionally use parameter file to make name lookup faster and apply min/max constraints
+
+
 ## Setup
 
 You need a recent Rust toolchain to compile this example.
@@ -52,7 +60,22 @@ The `customizer` tool accepts several arguments:
 - a list of actions in the form of `<VALUE_ID_OR_INDEX>=<VALUE>` where `<VALUE_ID_OR_INDEX>` can either be a value ID like `Relais_Regler_R1_Handbetrieb` or a value index like `0x0916` and where `<VALUE>` can either be a number if you want to write the value or a question mark if you want to read the value
 
 
+### Parameter files
+
+A parameter file is a text file according to the TOML specification. It includes information like the controller's address and optionally the changeset this file applies to. In addition to that it contains the list of well-known parameters, consisting of the following information:
+
+- ID of the parameter
+- optionally the index of the parameter (tied to this specific changeset)
+- the factor used to convert the stored value
+- the allowed minimum and maximum value
+
+
+**TODO(daniel)** include some parameter files in the example
+
+
 ### Example
+
+Since the names of parameters differ between controller families, this example assumes that you are connected to a DeltaSol MX.
 
 Read the value of `Relais_Regler_R1_Handbetrieb`:
 
