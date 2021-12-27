@@ -161,12 +161,11 @@ impl Default for DeviceDiscovery {
 
 #[cfg(test)]
 mod tests {
-    use async_std::{
-        net::{SocketAddr, TcpListener, UdpSocket},
-        prelude::*,
-    };
+    use async_std::net::{SocketAddr, TcpListener, UdpSocket};
 
     use super::*;
+
+    use crate::test_utils::create_webserver;
 
     #[test]
     fn test() -> Result<()> {
@@ -195,18 +194,8 @@ mod tests {
                 }
             });
 
-            let web_future = async_std::task::spawn::<_, Result<()>>(async move {
-                loop {
-                    let (mut stream, _) = web_socket.accept().await?;
-
-                    let mut buf = Vec::new();
-                    stream.read_to_end(&mut buf).await?;
-
-                    let response = b"HTTP/1.0 200 OK\r\n\r\nvendor = \"RESOL\"\r\nproduct = \"DL2\"\r\nserial = \"001E66xxxxxx\"\r\nversion = \"2.2.0\"\r\nbuild = \"rc1\"\r\nname = \"DL2-001E66xxxxxx\"\r\nfeatures = \"vbus,dl2\"\r\n";
-                    stream.write_all(response).await?;
-                    drop(stream);
-                }
-            });
+            let web_future =
+                async_std::task::spawn(async move { create_webserver(web_socket).await });
 
             let discovery_future = async_std::task::spawn::<_, Result<()>>(async move {
                 let mut discovery = DeviceDiscovery::new();
