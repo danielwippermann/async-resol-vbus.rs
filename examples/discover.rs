@@ -12,9 +12,10 @@ fn compare_devices(l: &DeviceInformation, r: &DeviceInformation) -> Ordering {
 
 fn main() -> Result<()> {
     async_std::task::block_on(async {
-        let mut discovery = DeviceDiscovery::new();
-        // discovery.set_broadcast_addr("192.168.15.255:7053".parse().unwrap());
-        discovery.set_fetch_port(3000);
+        let discovery = DeviceDiscovery::new();
+        // let mut discovery = DeviceDiscovery::new();
+        // discovery.set_broadcast_addr("192.168.180.255:7053".parse().unwrap());
+        // discovery.set_fetch_port(3000);
 
         let mut known_devices = Vec::<DeviceInformation>::new();
         loop {
