@@ -174,6 +174,9 @@ mod tests {
             let device_socket = UdpSocket::bind(device_addr).await?;
             let device_addr = device_socket.local_addr()?;
 
+            let mut broadcast_addr = "255.255.255.255:0".parse::<SocketAddr>()?;
+            broadcast_addr.set_port(device_addr.port());
+
             let web_addr = "0.0.0.0:0".parse::<SocketAddr>()?;
             let web_socket = TcpListener::bind(web_addr).await?;
             let web_addr = web_socket.local_addr()?;
@@ -199,7 +202,7 @@ mod tests {
 
             let discovery_future = async_std::task::spawn::<_, Result<()>>(async move {
                 let mut discovery = DeviceDiscovery::new();
-                discovery.set_broadcast_addr(device_addr);
+                discovery.set_broadcast_addr(broadcast_addr);
                 discovery.set_broadcast_timeout(Duration::from_millis(100));
                 discovery.set_fetch_port(web_addr.port());
                 discovery.set_fetch_timeout(Duration::from_millis(100));
